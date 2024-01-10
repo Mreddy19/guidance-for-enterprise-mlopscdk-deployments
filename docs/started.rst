@@ -19,7 +19,7 @@ Prerequisites
 
 1. 4 AWS Accounts: Each account has a user with aws_access_key_id and aws_secret_access_key
 2. You can use this template `credentials <https://quip-amazon.com/-/blob/dMe9AAWl58S/nbYEYfqGzPZkj0aC36zhkA?name=credentials>`_ for your credential and saved at your aws configure location, the location for macOS is your root user name ./aws/credential
-    Note: Keep your access key and secret access key safe and secure locally, never share them with anyone or save them in the same location as your code that will be pushed to GitHub or Cloud. 
+    Note: Keep your access key and secret access key safe and secure locally, never share them with anyone or save them in the same location as your code that will be pushed to GitHub or Cloud.
     Note: Running the bash script uses brew to install all dependencies, make sure you have brew installed (see brew.sh)
 3. Keep account ID handy for all four accounts
     *	Gov
@@ -34,27 +34,27 @@ Prerequisites
 9. Docker (Running Docker is a must on your Desktop)
 
 Install Prerequisites (Skip if installed manually on previous step)
-
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Install requirements by running the entire script or installing commands one at a time, as directed in the cloned repository. The bash file is located at mlops-multi-account-cdk/mlops-infra/scripts/install-prerequisites-brew.sh
-#. Run mwinit to authenticate
-    mwinit —aea
-#. Install brew per brew-sh website
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-  * Note: You may get this error
-    ssh: Could not resolve hostname git.amazon.com: nodename nor servname provided, or not known
-    fatal: Could not read from remote repository.
+  #. Run mwinit to authenticate
+      mwinit —aea
+  #. Install brew per brew-sh website
+      /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    * Note: You may get this error
+      ssh: Could not resolve hostname git.amazon.com: nodename nor servname provided, or not known
+      fatal: Could not read from remote repository.
 
-  * To resolve run you can either do one of these:
-    * Uninstall currently existing Homebrew
-      /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/uninstall.sh)“
+    * To resolve run you can either do one of these:
+      * Uninstall currently existing Homebrew
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/uninstall.sh)“
 
-    * Error in installing brew, use this to set up cetificates on work mac
-        ssh-keyscan git.amazon.com >> ~/.ssh/known_hosts
-        or
-        kinit -f && mwinit -o && ssh-add
+      * Error in installing brew, use this to set up cetificates on work mac
+          ssh-keyscan git.amazon.com >> ~/.ssh/known_hosts
+          or
+          kinit -f && mwinit -o && ssh-add
 
 Step by Step Guide
-==================
+-------------------------
 
 Step 1: Getting the assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -81,26 +81,26 @@ Step 2: Set up Python
 
 Step 3: Update the assets with Account ID and Deployment Region
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    #. Navigate to mlops_infra/mlops_infra/config folder and update these two files:
+    * Navigate to mlops_infra/mlops_infra/config folder and update these two files:
       	* accounts.json: 
-          * Add Account ID for Dev, Preprod and Prod. It should look like this.
-          .. code-block:: JSON
-              [
-                  {
-                      "SET_NAME": "first-example",
-                      "DEV_ACCOUNT": "123456789012",
-                      "PREPROD_ACCOUNT": "123456789012",
-                      "PROD_ACCOUNT": "123456789012"
-                  }
-              ]
+          #. Add Account ID for Dev, Preprod and Prod. It should look like this.
+              .. code-block:: JSON
+                    [
+                        {
+                            "SET_NAME": "first-example",
+                            "DEV_ACCOUNT": "123456789012",
+                            "PREPROD_ACCOUNT": "123456789012",
+                            "PROD_ACCOUNT": "123456789012"
+                        }
+                    ]
         * constants.py:
-          * Add Gov AWS Account ID and Region of Deployment. It should like this:
-          .. code-block:: python
-              CODE_COMMIT_REPO_NAME = "mlops-infra"
-              PIPELINE_BRANCH = "main"
-              PIPELINE_ACCOUNT = "123456789012"  # account to host the pipeline handling updates of this repository
-              DEFAULT_DEPLOYMENT_REGION = "us-west-2"
-              APP_PREFIX = "mlops"
+          #. Add Gov AWS Account ID and Region of Deployment. It should like this:
+              .. code-block:: python
+                    CODE_COMMIT_REPO_NAME = "mlops-infra"
+                    PIPELINE_BRANCH = "main"
+                    PIPELINE_ACCOUNT = "123456789012"  # account to host the pipeline handling updates of this repository
+                    DEFAULT_DEPLOYMENT_REGION = "us-west-2"
+                    APP_PREFIX = "mlops"
 
     #. Navigate to mlops-sm-project-template/mlops_sm_project_template/config folder and update these two files:
       	* accounts.json: 

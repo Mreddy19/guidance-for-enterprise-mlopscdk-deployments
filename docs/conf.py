@@ -27,6 +27,7 @@ extensions = [
 ]
 autosectionlabel_prefix_document = True
 source_suffix = {".rst": "restructuredtext"}
+pygments_style = 'sphinx'
 
 # URL-shortener. The example below aliases the long pandas url with pdug.
 extlinks = {
