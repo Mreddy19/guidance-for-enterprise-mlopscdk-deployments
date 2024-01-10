@@ -109,7 +109,8 @@ Step 3: Update the assets with Account ID and Deployment Region
     #. Navigate to mlops-sm-project-template/mlops_sm_project_template/config folder and update these two files:
       	*	accounts.json: 
           * Add Account ID for Dev, Preprod and Prod. It should look like this.
-          ::
+          .. code-block:: JSON
+
               [
                   {
                       "SET_NAME": "first-example",
