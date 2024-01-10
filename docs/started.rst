@@ -1,9 +1,9 @@
 Platform setup
 =========================================================
 
-To get started you will need and AWS account where this platform hasn't been installed previously. Here are main steps :
+To get started you will need an AWS account where this platform hasn't been installed previously. Here are main steps :
 
-* :ref:`started:Deploy the Infrastructure`: you will need Admin privileges in your AWS account to deploy the infrastructure using CloudFormation. The process takes approximately 1 hour and involves deployment of the necessary infrastructure. It is important to **configure SSO** as the roles during the infrastructure deployment need to be linked to users in your environment. This will depend on how SSO is set up in your organisation.
+* :ref:`started:Deploy the Infrastructure`: you will need Admin privileges in your AWS account to deploy the infrastructure using CDK. The process takes approximately 1 hour and involves deployment of the necessary infrastructure. It is important to **configure SSO** as the roles during the infrastructure deployment need to be linked to users in your environment. This will depend on how SSO is set up in your organisation.
 * :ref:`started:Create a SageMaker Project`: The Data Science Admin logs to SageMaker Studio through AWS console and creates an isolated SageMaker Project for data science work.
 * :ref:`started:Create a SageMaker Studio User`: Data Science Admin logs into the AWS console to create a new SageMaker Studio user using `AWS Service Catalog <https://aws.amazon.com/servicecatalog/>`_ and links the new user to the project created in the previous step. 
 * :ref:`started:Launch SageMaker Studio as Data Science User`: A Data Scientist logs into the AWS console, accesses SageMaker user to which they have access, launches a SageMaker Studio session and begins working on a data science project that was defined for them by the Data Science Admin in the previous step.
@@ -12,222 +12,117 @@ To get started you will need and AWS account where this platform hasn't been ins
 Deploy The Infrastructure
 -------------------------
 
-TASK: Deploy the initial infrastructure using CloudFormation template. 
+TASK: Deploy the initial infrastructure using CDK. 
 
-Deployment can be initiated from either the ``main`` or the ``develop`` branches. The stable version of the deployment is on the ``main`` branch. The latest development version of the deployment is on the ``develop`` branch. 
+Prerequisites
+^^^^^^^^^^^^^
 
-Deploy From The ``main`` Branch
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+1. 4 AWS Accounts: Each account has a user with aws_access_key_id and aws_secret_access_key
+2. You can use this template `credentials <https://quip-amazon.com/-/blob/dMe9AAWl58S/nbYEYfqGzPZkj0aC36zhkA?name=credentials>`_ for your credential and saved at your aws configure location, the location for macOS is your root user name ./aws/credential
+    Note: Keep your access key and secret access key safe and secure locally, never share them with anyone or save them in the same location as your code that will be pushed to GitHub or Cloud. 
+    Note: Running the bash script uses brew to install all dependencies, make sure you have brew installed (see brew.sh)
+3. Keep account ID handy for all four accounts
+    *	Gov
+    *	Dev
+    *	PreProd
+    *	Prod
+4. Node.js 
+5. Python3.8+ or Miniconda
+6. AWS CDK v2 (brew install aws-cdk)
+7. AWS CLI
+8. GIT
+9. Docker (Running Docker is a must on your Desktop)
 
-Click on the "Launch Stack" button below corresponding to your AWS region.
-You may then be required to log into the target AWS account in which the
-infrastructure will be deployed.
+Install Prerequisites (Skip if installed manually on previous step)
 
+Install requirements by running the entire script or installing commands one at a time, as directed in the cloned repository. The bash file is located at mlops-multi-account-cdk/mlops-infra/scripts/install-prerequisites-brew.sh
+#. Run mwinit to authenticate
+    mwinit —aea
+#. Install brew per brew-sh website
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  * Note: You may get this error
+    ssh: Could not resolve hostname git.amazon.com: nodename nor servname provided, or not known
+    fatal: Could not read from remote repository.
 
-.. list-table::
-   :widths: 25 25 50
-   :header-rows: 1
+  * To resolve run you can either do one of these:
+    * Uninstall currently existing Homebrew
+      /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/uninstall.sh)“
 
-   * - Region name
-     - Region code
-     - Launch
+    * Error in installing brew, use this to set up cetificates on work mac
+        ssh-keyscan git.amazon.com >> ~/.ssh/known_hosts
+        or
+        kinit -f && mwinit -o && ssh-add
 
-   * - US East (N. Virginia)
-     - us-east-1
-     - |useast1|_
+Step by Step Guide
+==================
 
-   * - US East (Ohio)
-     - us-east-2
-     - |useast2|_
+Step 1: Getting the assets
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+Create a folder named “mlops-cdk” or a name you prefer and navigate to the folder in your Terminal or CMD. Clone SageMaker Customer Project Templates repository from AWS Samples, copy the mlops-multi-account-cdk 
 
-   * - US West (Oregon)
-     - us-west-2
-     - |uswest2|_
+    # Create a new directory
+    mkdir mlops-cdk
+    # Navigate to your new directory
+    cd mlops-cdk
+    # Clone public repo with the CDK solution
+    git clone https://github.com/aws-samples/sagemaker-custom-project-templates
+    # Create a copy of MLOps Multi-Account CDK 
+    cp -a sagemaker-custom-project-templates/mlops-multi-account-cdk ./
 
-   * - Asia Pacific (Mumbai)
-     - ap-south-1
-     - |apsouth1|_
+Step 2: Set up Python
+^^^^^^^^^^^^^^^^^^^^^
+    You need to create a Python virtual environment
+    conda create -n cdk python=3.8 # I tested on 3.8 but you can try latest).
+    conda init zsh
+    conda activate cdk
 
-   * - Asia Pacific (Singapore)
-     - ap-southeast-1
-     - |apsoutheast1|_
+    ## Install python packages
+    pip install awscli
 
-   * - Asia Pacific (Sydney)
-     - ap-southeast-2
-     - |apsoutheast2|_
+Step 3: Update the assets with Account ID and Deployment Region
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    #. Navigate to mlops_infra/mlops_infra/config folder and update these two files:
+      	* accounts.json: 
+          * Add Account ID for Dev, Preprod and Prod. It should look like this.
+          .. code-block:: JSON
+              [
+                  {
+                      "SET_NAME": "first-example",
+                      "DEV_ACCOUNT": "123456789012",
+                      "PREPROD_ACCOUNT": "123456789012",
+                      "PROD_ACCOUNT": "123456789012"
+                  }
+              ]
+        * constants.py:
+          * Add Gov AWS Account ID and Region of Deployment. It should like this:
+          .. code-block:: python
+              CODE_COMMIT_REPO_NAME = "mlops-infra"
+              PIPELINE_BRANCH = "main"
+              PIPELINE_ACCOUNT = "123456789012"  # account to host the pipeline handling updates of this repository
+              DEFAULT_DEPLOYMENT_REGION = "us-west-2"
+              APP_PREFIX = "mlops"
 
-   * - Asia Pacific (Tokyo)
-     - ap-northeast-1
-     - |apnortheast1|_
-
-   * - EU (Frankfurt)
-     - eu-central-1
-     - |eucentral1|_
-
-   * - EU (Ireland)
-     - eu-west-1
-     - |euwest1|_
-
-   * - Europe (London)
-     - eu-west-2
-     - |euwest2|_
-
-   * - Europe (Paris)
-     - eu-west-3
-     - |euwest3|_
-
-   * - Europe (Milan)
-     - eu-south-1
-     - |eusouth1|_
-
-   * - Europe (Stockholm)
-     - eu-north-1
-     - |eunorth1|_
-
-.. |useast1| image:: images/cloudformation-launch-stack.png
-.. _useast1: https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/quickcreate?templateUrl=https%3A%2F%2Faws-enterprise-mlops-platform.s3.amazonaws.com%2Fmlops_entry_point.yaml&stackName=aws-mlops-accelerator-stack&param_BucketName=aws-enterprise-mlops-platform&param_CostCenter=12345
-
-.. |useast2| image:: images/cloudformation-launch-stack.png
-.. _useast2: https://us-east-2.console.aws.amazon.com/cloudformation/home?region=us-east-2#/stacks/quickcreate?templateUrl=https%3A%2F%2Faws-enterprise-mlops-platform.s3.amazonaws.com%2Fmlops_entry_point.yaml&stackName=aws-mlops-accelerator-stack&param_BucketName=aws-enterprise-mlops-platform&param_CostCenter=12345
-
-.. |uswest2| image:: images/cloudformation-launch-stack.png
-.. _uswest2: https://us-west-2.console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/quickcreate?templateUrl=https%3A%2F%2Faws-enterprise-mlops-platform.s3.amazonaws.com%2Fmlops_entry_point.yaml&stackName=aws-mlops-accelerator-stack&param_BucketName=aws-enterprise-mlops-platform&param_CostCenter=12345
-
-.. |apsouth1| image:: images/cloudformation-launch-stack.png
-.. _apsouth1: https://ap-south-1.console.aws.amazon.com/cloudformation/home?region=ap-south-1#/stacks/quickcreate?templateUrl=https%3A%2F%2Faws-enterprise-mlops-platform.s3.amazonaws.com%2Fmlops_entry_point.yaml&stackName=aws-mlops-accelerator-stack&param_BucketName=aws-enterprise-mlops-platform&param_CostCenter=12345
-
-.. |apsoutheast1| image:: images/cloudformation-launch-stack.png
-.. _apsoutheast1: https://ap-southeast-1.console.aws.amazon.com/cloudformation/home?region=ap-southeast-1#/stacks/quickcreate?templateUrl=https%3A%2F%2Faws-enterprise-mlops-platform.s3.amazonaws.com%2Fmlops_entry_point.yaml&stackName=aws-mlops-accelerator-stack&param_BucketName=aws-enterprise-mlops-platform&param_CostCenter=12345
-
-.. |apsoutheast2| image:: images/cloudformation-launch-stack.png
-.. _apsoutheast2: https://ap-southeast-2.console.aws.amazon.com/cloudformation/home?region=ap-southeast-2#/stacks/quickcreate?templateUrl=https%3A%2F%2Faws-enterprise-mlops-platform.s3.amazonaws.com%2Fmlops_entry_point.yaml&stackName=aws-mlops-accelerator-stack&param_BucketName=aws-enterprise-mlops-platform&param_CostCenter=12345
-
-.. |apnortheast1| image:: images/cloudformation-launch-stack.png
-.. _apnortheast1: https://ap-northeast-1.console.aws.amazon.com/cloudformation/home?region=ap-northeast-1#/stacks/quickcreate?templateUrl=https%3A%2F%2Faws-enterprise-mlops-platform.s3.amazonaws.com%2Fmlops_entry_point.yaml&stackName=aws-mlops-accelerator-stack&param_BucketName=aws-enterprise-mlops-platform&param_CostCenter=12345
-
-.. |eucentral1| image:: images/cloudformation-launch-stack.png
-.. _eucentral1: https://eu-central-1.console.aws.amazon.com/cloudformation/home?region=eu-central-1#/stacks/quickcreate?templateUrl=https%3A%2F%2Faws-enterprise-mlops-platform.s3.amazonaws.com%2Fmlops_entry_point.yaml&stackName=aws-mlops-accelerator-stack&param_BucketName=aws-enterprise-mlops-platform&param_CostCenter=12345
-
-.. |euwest1| image:: images/cloudformation-launch-stack.png
-.. _euwest1: https://eu-west-1.console.aws.amazon.com/cloudformation/home?region=eu-west-1#/stacks/quickcreate?templateUrl=https%3A%2F%2Faws-enterprise-mlops-platform.s3.amazonaws.com%2Fmlops_entry_point.yaml&stackName=aws-mlops-accelerator-stack&param_BucketName=aws-enterprise-mlops-platform&param_CostCenter=12345
-
-.. |euwest2| image:: images/cloudformation-launch-stack.png
-.. _euwest2: https://eu-west-2.console.aws.amazon.com/cloudformation/home?region=eu-west-2#/stacks/quickcreate?templateUrl=https%3A%2F%2Faws-enterprise-mlops-platform.s3.amazonaws.com%2Fmlops_entry_point.yaml&stackName=aws-mlops-accelerator-stack&param_BucketName=aws-enterprise-mlops-platform&param_CostCenter=12345
-
-.. |euwest3| image:: images/cloudformation-launch-stack.png
-.. _euwest3: https://eu-west-3.console.aws.amazon.com/cloudformation/home?region=eu-west-3#/stacks/quickcreate?templateUrl=https%3A%2F%2Faws-enterprise-mlops-platform.s3.amazonaws.com%2Fmlops_entry_point.yaml&stackName=aws-mlops-accelerator-stack&param_BucketName=aws-enterprise-mlops-platform&param_CostCenter=12345
-
-.. |eusouth1| image:: images/cloudformation-launch-stack.png
-.. _eusouth1: https://eu-south-1.console.aws.amazon.com/cloudformation/home?region=eu-south-1#/stacks/quickcreate?templateUrl=https%3A%2F%2Faws-enterprise-mlops-platform.s3.amazonaws.com%2Fmlops_entry_point.yaml&stackName=aws-mlops-accelerator-stack&param_BucketName=aws-enterprise-mlops-platform&param_CostCenter=12345
-
-.. |eunorth1| image:: images/cloudformation-launch-stack.png
-.. _eunorth1: https://eu-north-1.console.aws.amazon.com/cloudformation/home?region=eu-north-1#/stacks/quickcreate?templateUrl=https%3A%2F%2Faws-enterprise-mlops-platform.s3.amazonaws.com%2Fmlops_entry_point.yaml&stackName=aws-mlops-accelerator-stack&param_BucketName=aws-enterprise-mlops-platform&param_CostCenter=12345
-
-Deploy From The ``develop`` Branch
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Click on the "Launch Stack" button below corresponding to your AWS region.
-You may then be required to log into the target AWS account in which the
-infrastructure will be deployed.
-
-.. list-table::
-   :header-rows: 1
-
-   * - Region name
-     - Region code
-     - Launch
-
-   * - US East (N. Virginia)
-     - us-east-1
-     - |useast1dev|_
-
-   * - US East (Ohio)
-     - us-east-2
-     - |useast2dev|_
-
-   * - US West (Oregon)
-     - us-west-2
-     - |uswest2dev|_
-
-   * - Asia Pacific (Mumbai)
-     - ap-south-1
-     - |apsouth1dev|_
-
-   * - Asia Pacific (Singapore)
-     - ap-southeast-1
-     - |apsoutheast1dev|_
-
-   * - Asia Pacific (Sydney)
-     - ap-southeast-2
-     - |apsoutheast2dev|_
-
-   * - Asia Pacific (Tokyo)
-     - ap-northeast-1
-     - |apnortheast1dev|_
-
-   * - EU (Frankfurt)
-     - eu-central-1
-     - |eucentral1dev|_
-
-   * - EU (Ireland)
-     - eu-west-1
-     - |euwest1dev|_
-
-   * - Europe (London)
-     - eu-west-2
-     - |euwest2dev|_
-
-   * - Europe (Paris)
-     - eu-west-3
-     - |euwest3dev|_
-
-   * - Europe (Milan)
-     - eu-south-1
-     - |eusouth1dev|_
-
-   * - Europe (Stockholm)
-     - eu-north-1
-     - |eunorth1dev|_
-
-
-.. |useast1dev| image:: images/cloudformation-launch-stack.png
-.. _useast1dev: https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/quickcreate?templateUrl=https%3A%2F%2Faws-enterprise-mlops-platform-develop.s3.amazonaws.com%2Fmlops_entry_point.yaml&stackName=aws-mlops-accelerator-stack&param_BucketName=aws-enterprise-mlops-platform-develop&param_CostCenter=12345&param_BranchName=main
-
-.. |useast2dev| image:: images/cloudformation-launch-stack.png
-.. _useast2dev: https://us-east-2.console.aws.amazon.com/cloudformation/home?region=us-east-2#/stacks/quickcreate?templateUrl=https%3A%2F%2Faws-enterprise-mlops-platform-develop.s3.amazonaws.com%2Fmlops_entry_point.yaml&stackName=aws-mlops-accelerator-stack&param_BucketName=aws-enterprise-mlops-platform-develop&param_CostCenter=12345&param_BranchName=main
-
-.. |uswest2dev| image:: images/cloudformation-launch-stack.png
-.. _uswest2dev: https://us-west-2.console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/quickcreate?templateUrl=https%3A%2F%2Faws-enterprise-mlops-platform-develop.s3.amazonaws.com%2Fmlops_entry_point.yaml&stackName=aws-mlops-accelerator-stack&param_BucketName=aws-enterprise-mlops-platform-develop&param_CostCenter=12345&param_BranchName=main
-
-.. |apsouth1dev| image:: images/cloudformation-launch-stack.png
-.. _apsouth1dev: https://ap-south-1.console.aws.amazon.com/cloudformation/home?region=ap-south-1#/stacks/quickcreate?templateUrl=https%3A%2F%2Faws-enterprise-mlops-platform-develop.s3.amazonaws.com%2Fmlops_entry_point.yaml&stackName=aws-mlops-accelerator-stack&param_BucketName=aws-enterprise-mlops-platform-develop&param_CostCenter=12345&param_BranchName=main
-
-.. |apsoutheast1dev| image:: images/cloudformation-launch-stack.png
-.. _apsoutheast1dev: https://ap-southeast-1.console.aws.amazon.com/cloudformation/home?region=ap-southeast-1#/stacks/quickcreate?templateUrl=https%3A%2F%2Faws-enterprise-mlops-platform-develop.s3.amazonaws.com%2Fmlops_entry_point.yaml&stackName=aws-mlops-accelerator-stack&param_BucketName=aws-enterprise-mlops-platform-develop&param_CostCenter=12345&param_BranchName=main
-
-.. |apsoutheast2dev| image:: images/cloudformation-launch-stack.png
-.. _apsoutheast2dev: https://ap-southeast-2.console.aws.amazon.com/cloudformation/home?region=ap-southeast-2#/stacks/quickcreate?templateUrl=https%3A%2F%2Faws-enterprise-mlops-platform-develop.s3.amazonaws.com%2Fmlops_entry_point.yaml&stackName=aws-mlops-accelerator-stack&param_BucketName=aws-enterprise-mlops-platform-develop&param_CostCenter=12345&param_BranchName=main
-
-.. |apnortheast1dev| image:: images/cloudformation-launch-stack.png
-.. _apnortheast1dev: https://ap-northeast-1.console.aws.amazon.com/cloudformation/home?region=ap-northeast-1#/stacks/quickcreate?templateUrl=https%3A%2F%2Faws-enterprise-mlops-platform-develop.s3.amazonaws.com%2Fmlops_entry_point.yaml&stackName=aws-mlops-accelerator-stack&param_BucketName=aws-enterprise-mlops-platform-develop&param_CostCenter=12345&param_BranchName=main
-
-.. |eucentral1dev| image:: images/cloudformation-launch-stack.png
-.. _eucentral1dev: https://eu-central-1.console.aws.amazon.com/cloudformation/home?region=eu-central-1#/stacks/quickcreate?templateUrl=https%3A%2F%2Faws-enterprise-mlops-platform-develop.s3.amazonaws.com%2Fmlops_entry_point.yaml&stackName=aws-mlops-accelerator-stack&param_BucketName=aws-enterprise-mlops-platform-develop&param_CostCenter=12345&param_BranchName=main
-
-.. |euwest1dev| image:: images/cloudformation-launch-stack.png
-.. _euwest1dev: https://eu-west-1.console.aws.amazon.com/cloudformation/home?region=eu-west-1#/stacks/quickcreate?templateUrl=https%3A%2F%2Faws-enterprise-mlops-platform-develop.s3.amazonaws.com%2Fmlops_entry_point.yaml&stackName=aws-mlops-accelerator-stack&param_BucketName=aws-enterprise-mlops-platform-develop&param_CostCenter=12345&param_BranchName=main
-
-.. |euwest2dev| image:: images/cloudformation-launch-stack.png
-.. _euwest2dev: https://eu-west-2.console.aws.amazon.com/cloudformation/home?region=eu-west-2#/stacks/quickcreate?templateUrl=https%3A%2F%2Faws-enterprise-mlops-platform-develop.s3.amazonaws.com%2Fmlops_entry_point.yaml&stackName=aws-mlops-accelerator-stack&param_BucketName=aws-enterprise-mlops-platform-develop&param_CostCenter=12345&param_BranchName=main
-
-.. |euwest3dev| image:: images/cloudformation-launch-stack.png
-.. _euwest3dev: https://eu-west-3.console.aws.amazon.com/cloudformation/home?region=eu-west-3#/stacks/quickcreate?templateUrl=https%3A%2F%2Faws-enterprise-mlops-platform-develop.s3.amazonaws.com%2Fmlops_entry_point.yaml&stackName=aws-mlops-accelerator-stack&param_BucketName=aws-enterprise-mlops-platform-develop&param_CostCenter=12345&param_BranchName=main
-
-.. |eusouth1dev| image:: images/cloudformation-launch-stack.png
-.. _eusouth1dev: https://eu-south-1.console.aws.amazon.com/cloudformation/home?region=eu-south-1#/stacks/quickcreate?templateUrl=https%3A%2F%2Faws-enterprise-mlops-platform-develop.s3.amazonaws.com%2Fmlops_entry_point.yaml&stackName=aws-mlops-accelerator-stack&param_BucketName=aws-enterprise-mlops-platform-develop&param_CostCenter=12345&param_BranchName=main
-
-.. |eunorth1dev| image:: images/cloudformation-launch-stack.png
-.. _eunorth1dev: https://eu-north-1.console.aws.amazon.com/cloudformation/home?region=eu-north-1#/stacks/quickcreate?templateUrl=https%3A%2F%2Faws-enterprise-mlops-platform-develop.s3.amazonaws.com%2Fmlops_entry_point.yaml&stackName=aws-mlops-accelerator-stack&param_BucketName=aws-enterprise-mlops-platform-develop&param_CostCenter=12345&param_BranchName=main
+    #. Navigate to mlops-sm-project-template/mlops_sm_project_template/config folder and update these two files:
+      	* accounts.json: 
+          * Add Account ID for Dev, Preprod and Prod. It should look like this.
+          .. code-block:: JSON
+              [
+                  {
+                      "SET_NAME": "first-example",
+                      "DEV_ACCOUNT": "123456789012",
+                      "PREPROD_ACCOUNT": "123456789012",
+                      "PROD_ACCOUNT": "123456789012",
+                      "DEPLOYMENT_REGION":"us-west-2"
+                  }
+              ]
+        *	constants.py:
+          * Add Gov AWS Account ID and Region of Deployment. It should like this:
+          .. code-block:: python
+              CODE_COMMIT_REPO_NAME = "mlops-sm-project-template"
+              PIPELINE_BRANCH = "main"
+              PIPELINE_ACCOUNT = "123456789012"  # account used to host the pipeline handling updates of this repository
+              DEFAULT_DEPLOYMENT_REGION = "us-west-2"
+              APP_PREFIX = "mlops-cdk"
 
     This deploys a cloudformation stack named 'aws-mlops-accelerator-stack' which in turn deploys the following stacks to deploy the project's initial infrastructure:
     stackset-execution-role,

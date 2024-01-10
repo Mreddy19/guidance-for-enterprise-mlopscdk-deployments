@@ -78,7 +78,7 @@ The Enterprise MLOps Platform creates and assumes the following roles:
        | SageMaker Studio Domain
        | Source Code Repositories
        | Service Catalog Product
-     - CloudFormation
+     - CDK/CloudFormation
    * - Data Science Admin
      - Project and User Creation
      - Sagemaker Studio
