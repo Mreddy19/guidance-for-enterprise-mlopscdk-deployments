@@ -54,7 +54,7 @@ Install requirements by running the entire script or installing commands one at 
           kinit -f && mwinit -o && ssh-add
 
 Step by Step Guide
--------------------------
+------------------
 
 Step 1: Getting the assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -85,22 +85,22 @@ Step 3: Update the assets with Account ID and Deployment Region
       	* accounts.json: 
           #. Add Account ID for Dev, Preprod and Prod. It should look like this.
               .. code-block:: JSON
-                    [
-                        {
-                            "SET_NAME": "first-example",
-                            "DEV_ACCOUNT": "123456789012",
-                            "PREPROD_ACCOUNT": "123456789012",
-                            "PROD_ACCOUNT": "123456789012"
-                        }
-                    ]
+                  [
+                      {
+                          "SET_NAME": "first-example",
+                          "DEV_ACCOUNT": "123456789012",
+                          "PREPROD_ACCOUNT": "123456789012",
+                          "PROD_ACCOUNT": "123456789012"
+                      }
+                  ]
         * constants.py:
           #. Add Gov AWS Account ID and Region of Deployment. It should like this:
               .. code-block:: python
-                    CODE_COMMIT_REPO_NAME = "mlops-infra"
-                    PIPELINE_BRANCH = "main"
-                    PIPELINE_ACCOUNT = "123456789012"  # account to host the pipeline handling updates of this repository
-                    DEFAULT_DEPLOYMENT_REGION = "us-west-2"
-                    APP_PREFIX = "mlops"
+                  CODE_COMMIT_REPO_NAME = "mlops-infra"
+                  PIPELINE_BRANCH = "main"
+                  PIPELINE_ACCOUNT = "123456789012"  # account to host the pipeline handling updates of this repository
+                  DEFAULT_DEPLOYMENT_REGION = "us-west-2"
+                  APP_PREFIX = "mlops"
 
     #. Navigate to mlops-sm-project-template/mlops_sm_project_template/config folder and update these two files:
       	* accounts.json: 
