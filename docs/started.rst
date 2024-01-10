@@ -82,7 +82,7 @@ Step 2: Set up Python
 Step 3: Update the assets with Account ID and Deployment Region
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     #. Navigate to mlops_infra/mlops_infra/config folder and update these two files:
-      	* accounts.json: 
+      	*	accounts.json: 
           * Add Account ID for Dev, Preprod and Prod. It should look like this.
           ::
               [
@@ -106,7 +106,7 @@ Step 3: Update the assets with Account ID and Deployment Region
 
 
     #. Navigate to mlops-sm-project-template/mlops_sm_project_template/config folder and update these two files:
-      	* accounts.json: 
+      	*	accounts.json: 
           * Add Account ID for Dev, Preprod and Prod. It should look like this.
           ::
               [
