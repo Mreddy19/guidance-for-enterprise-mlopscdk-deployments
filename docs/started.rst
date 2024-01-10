@@ -83,7 +83,7 @@ Step 3: Update the assets with Account ID and Deployment Region
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     * Navigate to mlops_infra/mlops_infra/config folder and update these two files:
       	* accounts.json: 
-          #. Add Account ID for Dev, Preprod and Prod. It should look like this.
+          * Add Account ID for Dev, Preprod and Prod. It should look like this.
           ::
                 {
                     "SET_NAME": "first-example",
@@ -94,7 +94,7 @@ Step 3: Update the assets with Account ID and Deployment Region
  
                 
         * constants.py:
-          #. Add Gov AWS Account ID and Region of Deployment. It should like this:
+          * Add Gov AWS Account ID and Region of Deployment. It should like this:
           .. code-block:: python
 
               CODE_COMMIT_REPO_NAME = "mlops-infra"
