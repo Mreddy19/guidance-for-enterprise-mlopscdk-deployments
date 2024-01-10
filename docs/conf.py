@@ -23,7 +23,8 @@ release = "1.0.0-dev"
 extensions = [
     "sphinx.ext.autosectionlabel",
     "sphinx.ext.extlinks",
-    "nbsphinx"
+    "nbsphinx",
+    "sphinx_rtd_theme"
 ]
 autosectionlabel_prefix_document = True
 source_suffix = {".rst": "restructuredtext"}
