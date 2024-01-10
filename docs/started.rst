@@ -107,6 +107,7 @@ Step 3: Update the assets with Account ID and Deployment Region
       	* accounts.json: 
           * Add Account ID for Dev, Preprod and Prod. It should look like this.
           .. code-block:: JSON
+
               [
                   {
                       "SET_NAME": "first-example",
@@ -119,6 +120,7 @@ Step 3: Update the assets with Account ID and Deployment Region
         *	constants.py:
           * Add Gov AWS Account ID and Region of Deployment. It should like this:
           .. code-block:: python
+
               CODE_COMMIT_REPO_NAME = "mlops-sm-project-template"
               PIPELINE_BRANCH = "main"
               PIPELINE_ACCOUNT = "123456789012"  # account used to host the pipeline handling updates of this repository
